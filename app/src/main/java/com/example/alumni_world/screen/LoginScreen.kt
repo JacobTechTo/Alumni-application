@@ -1,5 +1,6 @@
 package com.example.alumni_world.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -35,6 +37,8 @@ import com.example.alumni_world.R
 import com.example.alumni_world.nav.Screens
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.flow.internal.NoOpContinuation.context
+import kotlin.coroutines.jvm.internal.CompletedContinuation.context
 
 // Initialize Firebase Auth globally
 private lateinit var auth: FirebaseAuth
@@ -44,9 +48,11 @@ private lateinit var auth: FirebaseAuth
 fun LoginScreen(navController: NavHostController) {
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
+
     // Assuming signup logic is implemented here
     fun signUpUser(email: String, password: String) {
-        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 // Send verification email
                 auth.currentUser?.sendEmailVerification()?.addOnCompleteListener {
