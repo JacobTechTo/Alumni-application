@@ -1,6 +1,5 @@
 package com.example.alumni_world.screen
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -27,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -37,15 +35,14 @@ import com.example.alumni_world.R
 import com.example.alumni_world.nav.Screens
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import kotlinx.coroutines.flow.internal.NoOpContinuation.context
-import kotlin.coroutines.jvm.internal.CompletedContinuation.context
+
 
 // Initialize Firebase Auth globally
 private lateinit var auth: FirebaseAuth
 
 @Composable
 
-fun LoginScreen(navController: NavHostController) {
+fun LoginScreen(navController: NavHostController, onGoogleSignInClick: () -> Unit) {
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
 
@@ -58,7 +55,7 @@ fun LoginScreen(navController: NavHostController) {
                 auth.currentUser?.sendEmailVerification()?.addOnCompleteListener {
                     if (it.isSuccessful) {
                         // Redirect to Email Verification Screen
-                        navController.navigate("email_verification")
+                        navController.navigate(Screens.EmailVerificationScreen.route)
                     } else {
                         // Handle error sending verification email
                         // Show error message
@@ -146,6 +143,12 @@ fun LoginScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Google Sign-In Button
+                Button(onClick = { onGoogleSignInClick() }) {
+                    Text("Sign in with Google")
+                }
+
+
                 // Sign Up button
                 Button(
                     onClick = {
@@ -155,7 +158,7 @@ fun LoginScreen(navController: NavHostController) {
                             { user ->
                                 successMessage = "Welcome ${user?.email}. A verification email has been sent."
                                 // Navigate to Dashboard after sign-up
-                                navController.navigate(Screens.DashboardScreen.route)
+                                navController.navigate(Screens.EmailVerificationScreen.route)
                             },
                             { error ->
                                 errorMessage = error
@@ -166,6 +169,7 @@ fun LoginScreen(navController: NavHostController) {
                 ) {
                     Text("Sign Up")
                 }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
