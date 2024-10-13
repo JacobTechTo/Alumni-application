@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "467530634231",
+    "project_id": "alumni-world-e2714",
+    "storage_bucket": "alumni-world-e2714.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:467530634231:android:dd015b614438ecd59b54f2",
+        "android_client_info": {
+          "package_name": "com.example.alumni_world"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2S0MD0ZpxR-mLoqmp40Ce8YIV-0RL_4s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
