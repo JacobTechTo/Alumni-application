@@ -20,20 +20,18 @@ import com.example.alumni_system.nav.Screens
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
-// Initialize Firebase Auth globally
-// FirebaseAuth instance
+// Initialize Firebase Auth
 private lateinit var auth: FirebaseAuth
 
 @Composable
 fun LoginScreen(navController: NavHostController) {
-    // Initialize Firebase Auth
-    auth = FirebaseAuth.getInstance()
+    auth = FirebaseAuth.getInstance()  // Initialize Firebase Auth
 
-    // State variables for user input and feedback
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var role by remember { mutableStateOf("alumni") } // Default role as "alumni"
+    var role by remember { mutableStateOf("alumni") } // Default role: "alumni"
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
 
@@ -75,7 +73,6 @@ fun LoginScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Email input field
                 TextField(
                     value = email,
                     onValueChange = { email = it },
@@ -86,7 +83,6 @@ fun LoginScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password input field
                 TextField(
                     value = password,
                     onValueChange = { password = it },
@@ -98,7 +94,6 @@ fun LoginScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Role Picker (Admin/Alumni)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -123,7 +118,6 @@ fun LoginScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Sign Up Button
                 Button(
                     onClick = {
                         signUp(
@@ -134,9 +128,7 @@ fun LoginScreen(navController: NavHostController) {
                                 successMessage = "Verification email sent! Check your inbox."
                                 navController.navigate(Screens.EmailVerificationScreen.route)
                             },
-                            onFailure = { error ->
-                                errorMessage = error
-                            }
+                            onFailure = { error -> errorMessage = error }
                         )
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -146,11 +138,8 @@ fun LoginScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Login Button for Existing Users
                 TextButton(
-                    onClick = {
-                        navController.navigate(Screens.SignInScreen.route)
-                    }
+                    onClick = { navController.navigate(Screens.SignInScreen.route) }
                 ) {
                     Text(
                         text = "Already have an account? Log in here",
@@ -158,7 +147,6 @@ fun LoginScreen(navController: NavHostController) {
                     )
                 }
 
-                // Display error message if sign-up fails
                 errorMessage?.let {
                     Text(
                         text = it,
@@ -167,7 +155,6 @@ fun LoginScreen(navController: NavHostController) {
                     )
                 }
 
-                // Display success message
                 successMessage?.let {
                     Text(
                         text = it,
@@ -180,7 +167,8 @@ fun LoginScreen(navController: NavHostController) {
     }
 }
 
-// Function to handle user registration and store role in Firestore
+
+// Function to handle registration without alumniId, using only uid
 private fun signUp(
     email: String,
     password: String,
@@ -194,15 +182,14 @@ private fun signUp(
                 val user = auth.currentUser
                 val db = FirebaseFirestore.getInstance()
 
-                // Save the user's role in Firestore
-                val userRole = hashMapOf(
+                val userRef = db.collection("users").document(user?.uid ?: "")
+                val userData = hashMapOf(
                     "uid" to (user?.uid ?: ""),
                     "role" to role,
                     "email" to email
                 )
 
-                db.collection("users").document(user?.uid ?: "")
-                    .set(userRole)
+                userRef.set(userData, SetOptions.merge())
                     .addOnSuccessListener {
                         // Send email verification
                         user?.sendEmailVerification()
@@ -215,10 +202,11 @@ private fun signUp(
                             }
                     }
                     .addOnFailureListener {
-                        onFailure("Failed to store user role in Firestore: ${it.message}")
+                        onFailure("Failed to save user data: ${it.message}")
                     }
             } else {
                 onFailure(task.exception?.message ?: "Sign-up failed.")
             }
         }
 }
+

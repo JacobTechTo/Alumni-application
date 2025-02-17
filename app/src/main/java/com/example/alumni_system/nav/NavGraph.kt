@@ -2,6 +2,7 @@ package com.example.alumni_system.nav
 
 
 import AlumniScreen
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.NavHostController
@@ -31,6 +32,12 @@ import com.example.alumni_system.screens.ViewProfileScreen
 import com.example.alumni_system.utils.SharedViewModel
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.runtime.remember
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.alumni_system.nav.Screens.JobSearchScreen
+import com.example.alumni_system.screens.AlumniProfileScreen
+import com.example.alumni_system.screens.AnalyticsScreen
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 @Composable
@@ -65,6 +72,11 @@ fun NavGraph(
         //SuperUser Screen
         composable(route= Screens.SuperUserScreen.route){
             SuperUserScreen(navController =navController)
+        }
+
+        //Alumni Profile
+        composable(route =Screens.AlumniProfileScreen.route){
+            AlumniProfileScreen(navController =navController, uid= "uid", applicationId= "applicationId", email="email")
         }
 
         //ManageRolesScreen
@@ -136,33 +148,49 @@ fun NavGraph(
             PublishProjectsScreen(navController =navController)
         }
 
-
-
-        //JobSearchScreen
-        composable(route = Screens.JobSearchScreen.route){
-            JobSearchScreen(navController= navController)
+        //AnalyticsScreen
+        composable(route = Screens.AnalyticsScreen.route){
+            AnalyticsScreen(navController =navController)
         }
+
+
+        // JobSearchScreen navigation (no alumniId)
+        composable(
+            route = Screens.JobSearchScreen.route
+        ) {
+            JobSearchScreen(navController = navController, uid = "uid" )
+        }
+
+
 
         //SignInScreen
         composable(route = Screens.SignInScreen.route) {
-            // Manage the state of the error message in the parent composable
-            var signInError: String = remember { mutableStateOf<String?>(null).toString() }
+            var signInError = remember { mutableStateOf<String?>(null) }
 
             SignInScreen(
-                navController = navController,
-                state = SignInState(signInError = signInError.toString()),
+                navController,
+                state = SignInState(signInError = signInError.value.toString()),
                 onSignInClick = { email, password ->
                     val auth = FirebaseAuth.getInstance()
+                    val db = FirebaseFirestore.getInstance()
+
                     auth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                // Navigate to home screen after successful login
-                                navController.navigate("home") // Adjust this route as needed
+                                val userId = auth.currentUser?.uid
+                                if (userId != null) {
+                                    db.collection("users").document(userId).get()
+                                        .addOnSuccessListener { document ->
+                                            val role = document.getString("role")
+                                            if (role == "admin") {
+                                                navController.navigate(Screens.AdminScreen.route) // Navigate to Admin Home
+                                            } else {
+                                                navController.navigate(Screens.AlumniScreen.route) // Navigate to Alumni Home
+                                            }
+                                        }
+                                }
                             } else {
-                                // Handle failure
-                                val errorMessage = task.exception?.message ?: "Sign-in failed."
-                                // Update sign-in error in the parent composable state
-                                signInError = errorMessage
+                                signInError.value = task.exception?.message ?: "Sign-in failed."
                             }
                         }
                 }

@@ -6,21 +6,36 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberImagePainter
 import com.example.alumni_system.nav.NavGraph
 import com.example.alumni_system.nav.Screens
 import com.example.alumni_system.ui.theme.AlumniSystemTheme
 import com.example.alumni_system.utils.SharedViewModel
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -30,7 +45,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        FirebaseApp.initializeApp(this)
         // Initialize FirebaseAuth
         auth = FirebaseAuth.getInstance()
 
@@ -66,8 +81,8 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    // Navigation graph for your app
-                    NavGraph(navController = navController, sharedViewModel = sharedViewModel)
+                    // Main App UI with Sidebar
+                    AppWithSidebar(navController, sharedViewModel)
                 }
             }
         }
@@ -122,7 +137,6 @@ class MainActivity : ComponentActivity() {
             }
             .addOnFailureListener {
                 // Handle Firestore failure (e.g., network issues)
-
                 navController.navigate(Screens.LoginScreen.route) {
                     popUpTo(0)
                 }
@@ -130,40 +144,95 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppWithSidebar(navController: NavHostController, sharedViewModel: SharedViewModel) {
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-//    @Preview(showBackground = true)
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            DrawerContent(
+                onLogout = {
+                    // Handle logout logic here
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate(Screens.LoginScreen.route) {
+                        popUpTo(0)
+                    }
+                },
+                onClose = {
+                    scope.launch {
+                        drawerState.close()
+                    }
+                }
+            )
+        }
+    ) {
+        Scaffold(
 
-//    @Composable
-//    fun EmailVerificationScreenPreview() {
-//        AlumniSystemTheme{
-//            EmailVerificationScreen { }
-//        }
-//    }
-
-
-
-        @Composable
-        fun AppNavGraphPreview() {
-            AlumniSystemTheme {
-                val navController = rememberNavController()
-                NavGraph(navController = navController, sharedViewModel = viewModel())
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                // Navigation graph for your app
+                NavGraph(navController = navController, sharedViewModel = sharedViewModel)
             }
         }
+    }
+}
 
+@Composable
+fun DrawerContent(onLogout: () -> Unit, onClose: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(16.dp)
+    ) {
+        // Profile Section
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = rememberImagePainter(
+                    data = "https://via.placeholder.com/150" // Replace with your image URL
+                ),
+                contentDescription = "Profile Image",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
 
+            Spacer(modifier = Modifier.height(32.dp))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+            // Logout Button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onLogout() }
+                    .padding(vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Logout",
+                    tint = Color.Gray
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = "Logout",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            }
+        }
+    }
+}
 
 

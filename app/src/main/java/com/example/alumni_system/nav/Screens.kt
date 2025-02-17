@@ -1,5 +1,7 @@
 package com.example.alumni_system.nav
 
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
 import com.example.alumni_system.presentation.profile.ProfileScreen
 
 
@@ -23,6 +25,8 @@ sealed class Screens(val route: String) {
     object UpdateProfileScreen: Screens(route = "update_profile_screen")
     object CreatePortfolioScreen: Screens(route = "create_portfolio_screen")
     object EditJobScreen: Screens(route = "edit_job_screen")
+    object AnalyticsScreen: Screens(route = "analytics_screen")
+    object AlumniProfileScreen: Screens(route ="alumni_profile")
 
     object EmailVerificationScreen : Screens(route ="email_verification_screen" )
 
